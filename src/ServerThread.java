@@ -94,8 +94,9 @@ public class ServerThread implements Runnable {
                 inMessage = in.nextLine();
 
                 if (inMessage.equals("exit")) {
-                    pw.println("\nGood bye ");
-                    break;
+                    pw.println("\nGood bye");
+                    remove();
+                    System.out.println("Client disconnected!");
                 }
 
                 System.out.printf("Received: '%s'.\n", inMessage);

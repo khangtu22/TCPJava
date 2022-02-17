@@ -10,7 +10,7 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) {
         try (Socket socket = new Socket("localhost", 9091)) {
-            System.out.println("Enter clientName: ");
+            System.out.print("Enter clientName: ");
             BufferedReader echoes = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
             PrintWriter stringToEcho = new PrintWriter(socket.getOutputStream(), true);
@@ -29,6 +29,7 @@ public class Client {
                     System.out.println(response);
                 }
             } while(!echoString.equals("exit"));
+
 
         } catch (IOException e) {
             System.out.println("Client Error: " + e.getMessage());

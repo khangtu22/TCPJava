@@ -3,37 +3,24 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server implements Runnable {
     private ServerSocket serverSocket;
-    private int port;
+    public static final int NUM_OF_THREAD = 4;
+    public final static int SERVER_PORT = 9091;
+    private ExecutorService executor;
 
     public Server() {
     }
 
-    public Server(int port) {
-        this.port = port;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public boolean start() {
-        try {
-            init(port);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
     public void init(int port) throws IOException {
+        System.out.println("Binding to port " + SERVER_PORT + ", please wait  ...");
         serverSocket = new ServerSocket(port);
+        System.out.println("Server started: " + serverSocket);
+        System.out.println("Waiting for a client ...");
+        executor = Executors.newFixedThreadPool(NUM_OF_THREAD);
     }
 
     public void loop() throws IOException {
@@ -43,14 +30,13 @@ public class Server implements Runnable {
             System.out.println("Got connection from: " + client.getInetAddress());
 
             ServerThread serverThread = new ServerThread(client);
-            Thread thread = new Thread(serverThread);
-            thread.start();
+            executor.execute(serverThread);
         }
     }
 
     public void run() {
         try {
-            init(this.port);
+            init(SERVER_PORT);
             loop();
         } catch (Exception e) {
             System.out.println(e.getMessage());
