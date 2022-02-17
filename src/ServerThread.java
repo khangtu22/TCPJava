@@ -1,4 +1,4 @@
-package com.company;
+//package com.company;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,9 +87,8 @@ public class ServerThread implements Runnable {
             pw = new PrintWriter(outputStream, true);
             Scanner in = new Scanner(inputStream);
             String clientName = in.nextLine();
-            pw.println("Hello " + clientName);
+            pw.println("SERVER>>> Hello " + clientName);
             String inMessage;
-
 
             while (true) {
                 inMessage = in.nextLine();
