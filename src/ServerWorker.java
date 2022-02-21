@@ -6,13 +6,13 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Server implements Runnable {
+public class ServerWorker implements Runnable {
     private ServerSocket serverSocket;
+    private ExecutorService executor;
     public static final int NUM_OF_THREAD = 4;
     public final static int SERVER_PORT = 9091;
-    private ExecutorService executor;
 
-    public Server() {
+    public ServerWorker() {
     }
 
     public void init(int port) throws IOException {

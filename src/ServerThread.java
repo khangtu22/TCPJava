@@ -16,7 +16,7 @@ public class ServerThread implements Runnable {
 
     public ServerThread(Socket socket) {
         clientSocket = socket;
-        add();
+        addInstance();
     }
 
     private static synchronized void dispatch(String message) {
@@ -43,11 +43,11 @@ public class ServerThread implements Runnable {
         return s.substring(0, s.length() - 1);
     }
 
-    private synchronized void add() {
+    private synchronized void addInstance() {
         instances.add(this);
     }
 
-    private synchronized void remove() {
+    private synchronized void removeInstance() {
         instances.remove(this);
     }
 
@@ -95,7 +95,7 @@ public class ServerThread implements Runnable {
 
                 if (inMessage.equals("exit")) {
                     pw.println("\nGood bye");
-                    remove();
+                    removeInstance();
                     System.out.println("Client disconnected!");
                 }
 
