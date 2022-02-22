@@ -1,9 +1,8 @@
-//package com.company;
+package frontend;//package com.company;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import backend.model.User;
+
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -15,6 +14,15 @@ public class Client {
                     new InputStreamReader(socket.getInputStream()));
             PrintWriter stringToEcho = new PrintWriter(socket.getOutputStream(), true);
 
+
+            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+            User user = new User("khang", "123456");
+            // send action message
+            os.writeUTF("login");
+            os.flush();
+
+            os.writeObject(user);
+            os.flush();
             Scanner scanner = new Scanner(System.in);
 
             String echoString;
@@ -32,7 +40,7 @@ public class Client {
 
 
         } catch (IOException e) {
-            System.out.println("Client Error: " + e.getMessage());
+            System.out.println("frontend.Client Error: " + e.getMessage());
         }
     }
 }

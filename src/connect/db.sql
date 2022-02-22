@@ -1,7 +1,7 @@
 CREATE
-    DATABASE IF NOT EXISTS `tcp` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+    DATABASE IF NOT EXISTS "tcp" DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE
-    `tcp`;
+    "tcp";
 -- --------------------------------------------------------
 
 --
