@@ -221,7 +221,7 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
     private void processConnection() throws IOException, ClassNotFoundException {
         setTextFieldEditable(true);
         Message messageIn = (Message) oi.readObject();
-        message = messageIn.getText();
+        message = messageIn.getMessage();
         if (message != null) {
             if (!message.equals("exit")) {
                 displayMessage("\n" + message);
@@ -257,7 +257,7 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
         try {
             if (message.equals("exit")) {
                 Message goodbyeMessage = (Message) oi.readObject();
-                displayMessage(goodbyeMessage.getText());
+                displayMessage(goodbyeMessage.getMessage());
             } else {
                 displayMessage("\nCLIENT>>> " + message);
             }

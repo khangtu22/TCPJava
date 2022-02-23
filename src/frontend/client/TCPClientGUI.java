@@ -72,8 +72,6 @@ public class TCPClientGUI extends JFrame {
         tpassword.setSize(190, 20);
         tpassword.setLocation(200, 100);
 
-
-
         panel.setVisible(false);
 
         tname.addActionListener(event -> {

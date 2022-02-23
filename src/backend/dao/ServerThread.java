@@ -26,9 +26,9 @@ public class ServerThread implements Runnable {
         addInstance();
     }
 
-    private static synchronized void dispatch(Message message) {
+    private static synchronized void dispatch(Message message, ObjectOutputStream oos) {
         for (ServerThread serverThread : instances) {
-            serverThread.dispatchMessage(message);
+            serverThread.dispatchMessage(message, oos);
         }
     }
 
@@ -58,14 +58,14 @@ public class ServerThread implements Runnable {
         instances.remove(this);
     }
 
-    private synchronized void dispatchMessage(Message message) {
-        String echoString = message.getText();
+    private synchronized void dispatchMessage(Message message, ObjectOutputStream oos) {
+        String echoString = message.getMessage();
         String patternEcho = "echo \".*\"";
         String patternStandardize = "standardize \".*\"";
         String serverNotation = "SERVER";
         try {
-            OutputStream out = this.clientSocket.getOutputStream();
-            ObjectOutputStream oss = new ObjectOutputStream(out);
+//            OutputStream out = this.clientSocket.getOutputStream();
+//            ObjectOutputStream oss = new ObjectOutputStream(out);
 
             if (echoString != null) {
                 boolean matchEcho = Pattern.matches(patternEcho, echoString);
@@ -73,17 +73,17 @@ public class ServerThread implements Runnable {
                 if (matchEcho) {
                     String tempEcho = handleEcho(echoString);
                     Message messageEcho = new Message(tempEcho);
-                    oss.writeObject(messageEcho);
-                    oss.flush();
+                    oos.writeObject(messageEcho);
+                    oos.flush();
                 } else if (matchStandardize) {
                     String tempEcho = handleStandardize(echoString);
                     Message messageEcho = new Message(tempEcho);
-                    oss.writeObject(messageEcho);
-                    oss.flush();
+                    oos.writeObject(messageEcho);
+                    oos.flush();
                 } else {
                     Message messageEcho = new Message("Command not found!");
-                    oss.writeObject(messageEcho);
-                    oss.flush();
+                    oos.writeObject(messageEcho);
+                    oos.flush();
                 }
             }
         } catch (IOException e) {
@@ -93,7 +93,9 @@ public class ServerThread implements Runnable {
     }
 
     private synchronized User checkLogin(User user) throws SQLException {
-        try (DBConnection dbHelper = DBConnection.getDBHelper(); Connection connection = dbHelper.getConnection(); PreparedStatement statement = connection.prepareStatement(USER_LOGIN)) {
+        try (DBConnection dbHelper = DBConnection.getDBHelper();
+             Connection connection = dbHelper.getConnection();
+             PreparedStatement statement = connection.prepareStatement(USER_LOGIN)) {
             statement.setString(1, user.getUsername());
             statement.setString(2, user.getPassword());
             ResultSet result = statement.executeQuery();
@@ -107,21 +109,27 @@ public class ServerThread implements Runnable {
     }
 
 
-    private synchronized Boolean isUserExisted(User user) throws SQLException {
-        boolean isExisted;
+    private synchronized User isUserExisted(User user) throws SQLException {
+        User existedUser = null;
         try (DBConnection dbHelper = DBConnection.getDBHelper();
              Connection connection = dbHelper.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_USER_BY_USERNAME)) {
             statement.setString(1, user.getUsername());
-            isExisted = statement.executeUpdate() > 0;
-            return isExisted;
+            ResultSet results = statement.executeQuery();
+            if (results.next()){
+                existedUser = new User();
+                existedUser.setUsername(results.getString("name"));
+            }
+            return existedUser;
         }
     }
 
 
     private synchronized Boolean createUser(User user) throws SQLException {
         boolean rowUpdated = false;
-        try (DBConnection dbHelper = DBConnection.getDBHelper(); Connection connection = dbHelper.getConnection(); PreparedStatement statement = connection.prepareStatement(USER_CREATE)) {
+        try (DBConnection dbHelper = DBConnection.getDBHelper();
+             Connection connection = dbHelper.getConnection();
+             PreparedStatement statement = connection.prepareStatement(USER_CREATE)) {
             statement.setString(1, user.getUsername());
             statement.setString(2, user.getPassword());
             rowUpdated = statement.executeUpdate() > 0;
@@ -143,8 +151,9 @@ public class ServerThread implements Runnable {
             Message message;
             while (true) {
                 String action = ois.readUTF();
+                System.out.println("Action: " + action);
                 switch (action) {
-                    case "login" -> {
+                    case "Login" -> {
                         User user = (User) ois.readObject();
                         System.out.println("Inside login: " + user.toString());
                         User existedUser = checkLogin(user);
@@ -159,30 +168,27 @@ public class ServerThread implements Runnable {
                         }
                     }
 
-                    case "register" -> {
-
+                    case "Register" -> {
                         User registerUser = (User) ois.readObject();
-                        boolean isUserExisted = isUserExisted(registerUser);
-                        if (!isUserExisted) {
+                        User isUserExisted = isUserExisted(registerUser);
+                        if (isUserExisted == null) {
                             boolean isCreated = createUser(registerUser);
                             if (isCreated) {
                                 System.out.println("Create user successful!");
                                 oss.writeUTF("success");
-                                oss.flush();
                             } else {
                                 System.out.println("Fail to create user!");
                                 oss.writeUTF("fail");
-                                oss.flush();
                             }
                         } else {
                             oss.writeUTF("Username already existed");
-                            oss.flush();
                         }
+                        oss.flush();
                     }
-                    default -> {
+                    case "Message" -> {
                         message = (Message) ois.readObject();
 
-                        if (message.getText().equals("exit")) {
+                        if (message.getMessage().equalsIgnoreCase("logout")) {
                             oss.writeObject(message);
                             removeInstance();
                             oss.flush();
@@ -190,7 +196,7 @@ public class ServerThread implements Runnable {
                         }
 
                         System.out.printf("Received: '%s'.\n", message);
-                        dispatch(message);
+                        dispatch(message, oss);
                     }
                 }
                 /*ois.close();

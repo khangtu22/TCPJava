@@ -13,6 +13,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * @author khang.tran
@@ -28,11 +29,17 @@ public class ClientManager extends WindowAdapter implements ActionListener {
 
     private static final long serialVersionUID = -6500665823330706018L;
 
-    private final Socket clientSocket;
+    private final Socket client;
+    private ObjectOutputStream output;
+    private ObjectInputStream input;
     private final String STORAGE_FILE = "//Users//khangtu//IdeaProjects//CourseMan//src//courseman2//courseman2.controllers//module.dat";
     @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private ArrayList<User> students;
+    private String message = "";
 
+    private JTextArea displayArea;
+    private JTextField enterField;
+    private JLabel enterFieldLabel;
     // view elements
     @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JFrame gui;
@@ -75,7 +82,7 @@ public class ClientManager extends WindowAdapter implements ActionListener {
      * {@link #createGUI()}: create <tt>gui</tt>
      */
     public ClientManager(Socket clientSocket) {
-        this.clientSocket = clientSocket;
+        this.client = clientSocket;
         students = new ArrayList<>();
 //        os = new ObjectOutputStream(socket.getOutputStream());
         createGUI();
@@ -161,7 +168,7 @@ public class ClientManager extends WindowAdapter implements ActionListener {
         switch (cmd) {
             case "LOGIN" -> {
                 try {
-                    createUser();
+                    boolean isCreateSuccess = createUser();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -180,10 +187,10 @@ public class ClientManager extends WindowAdapter implements ActionListener {
      *      display the exception message on the GUI dialog
      *          </pre>
      */
-    private void createUser() throws IOException {
-        try (OutputStream outputStream = clientSocket.getOutputStream();
+    private boolean createUser() throws IOException {
+        try (OutputStream outputStream = client.getOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-             InputStream inputStream = clientSocket.getInputStream();
+             InputStream inputStream = client.getInputStream();
              ObjectInputStream ois = new ObjectInputStream(inputStream);) {
 
             String username = tf1.getText();
@@ -204,12 +211,18 @@ public class ClientManager extends WindowAdapter implements ActionListener {
                 if(loginMessage.equals("success")){
 //                    TCPClientGUI tcpClientGUI = new TCPClientGUI("localhost", clientSocket);
 //                    tcpClientGUI.runClient();
+                    lbl1.setVisible(false);
+                    lbl2.setVisible(false);
+                    runClient();
                     JOptionPane.showMessageDialog(frame, "Login successful: " + user.getUsername());
+                    return true;
                 } else {
                     JOptionPane.showMessageDialog(frame, "Login fail!!");
+                    return false;
                 }
 
             }
+            return false;
         }
 
     }
@@ -310,4 +323,77 @@ public class ClientManager extends WindowAdapter implements ActionListener {
         }
 
     }
+
+
+    // connect to server and process messages
+    public void runClient() {
+        try {
+//            connectToServer();
+            while(!Objects.equals(message, "exit")) {
+                getStreams();
+                processConnection();
+            }
+        } catch (EOFException eofException) {
+            displayMessage("\nClient terminated connection");
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+    }
+
+    // send and receive data
+    private void getStreams() throws IOException {
+        output = new ObjectOutputStream(client.getOutputStream());
+        input = new ObjectInputStream(client.getInputStream());
+        processConnection();
+    }
+
+
+    // process connection with server
+    private void processConnection() throws IOException {
+//        setTextFieldEditable(true);
+        message = input.readLine();
+        if (message != null) {
+            if (!message.equals("exit")) {
+                displayMessage("\n" + message);
+            } else {
+                closeConnection();
+            }
+        }
+    }
+
+
+    // manipulates displayArea in the event-dispatch thread
+    private void displayMessage(final String messageToDisplay) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                displayArea.append(messageToDisplay);
+            }
+        });
+    }
+
+    // manipulates enterField in the event-dispatch thread
+    private void setTextFieldEditable(final boolean editable) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                enterField.setEditable(editable);
+            }
+        });
+    }
+
+
+    // close streams and socket
+    private void closeConnection() {
+        setTextFieldEditable(false);
+        try {
+            output.close();
+            input.close();
+            client.close();
+            displayMessage("Closed connection.");
+        } catch (IOException | NullPointerException ioException) {
+            System.out.println("Error close!");
+        }
+    }
+
 }

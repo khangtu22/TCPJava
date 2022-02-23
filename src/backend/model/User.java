@@ -2,6 +2,7 @@ package backend.model;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Scanner;
 
 public class User implements Serializable {
     @Serial
@@ -38,7 +39,16 @@ public class User implements Serializable {
     public String toString() {
         return "User{" +
                 "username='" + username + '\'' +
-                ", password='" + password + '\'' +
                 '}';
     }
+
+    public void inputUser() {
+        Scanner myObj = new Scanner(System.in);
+        System.out.println("Enter username");
+        this.username = myObj.nextLine();
+        System.out.println("Enter password:");
+        this.password = myObj.nextLine();
+    }
 }
+
+
