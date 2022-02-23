@@ -2,7 +2,6 @@ package frontend.client.controllers;
 
 import backend.model.User;
 import frontend.DomainConstraint;
-import frontend.client.TCPClientGUI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +23,8 @@ import java.util.ArrayList;
  *  optional(gui) = false
  *  </pre>
  */
-public class ClientManager extends WindowAdapter implements ActionListener {
+
+public class ClientLogin extends WindowAdapter implements ActionListener {
 
     private static final long serialVersionUID = -6500665823330706018L;
 
@@ -65,16 +65,13 @@ public class ClientManager extends WindowAdapter implements ActionListener {
     private JTextField tf1, tf2, tf3, tf4;
 
     @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
-    private JPasswordField pf1;
-
-    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private ObjectOutputStream os;
 
     /**
      * @effects initialise <tt>this</tt> with an empty set of students <br>
      * {@link #createGUI()}: create <tt>gui</tt>
      */
-    public ClientManager(Socket clientSocket) {
+    public ClientLogin(Socket clientSocket) {
         this.clientSocket = clientSocket;
         students = new ArrayList<>();
 //        os = new ObjectOutputStream(socket.getOutputStream());
@@ -121,16 +118,16 @@ public class ClientManager extends WindowAdapter implements ActionListener {
 
         // the text fields
         tf1 = new JTextField();
-        pf1 = new JPasswordField(20);
+        tf2 = new JTextField(20);
 
         // bind labels to text fields
         lbl1.setLabelFor(tf1);
-        lbl2.setLabelFor(pf1);
+        lbl2.setLabelFor(tf2);
 
         centre.add(lbl1);
         centre.add(tf1);
         centre.add(lbl2);
-        centre.add(pf1);
+        centre.add(tf2);
 
         // set up window
         gui.pack();
@@ -187,7 +184,7 @@ public class ClientManager extends WindowAdapter implements ActionListener {
              ObjectInputStream ois = new ObjectInputStream(inputStream);) {
 
             String username = tf1.getText();
-            String password = new String(pf1.getPassword());
+            String password = tf2.getText();
             System.out.println("User try to login: " + username);
             if (username.equals("") || password.equals("")) {
                 JOptionPane.showMessageDialog(frame, "Login fail!!");
@@ -202,8 +199,6 @@ public class ClientManager extends WindowAdapter implements ActionListener {
                 String loginMessage = ois.readUTF();
                 System.out.println("Is login success: " + loginMessage );
                 if(loginMessage.equals("success")){
-//                    TCPClientGUI tcpClientGUI = new TCPClientGUI("localhost", clientSocket);
-//                    tcpClientGUI.runClient();
                     JOptionPane.showMessageDialog(frame, "Login successful: " + user.getUsername());
                 } else {
                     JOptionPane.showMessageDialog(frame, "Login fail!!");

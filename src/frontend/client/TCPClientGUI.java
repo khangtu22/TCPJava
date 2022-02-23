@@ -26,6 +26,7 @@ public class TCPClientGUI extends JFrame {
 
     public TCPClientGUI(String host) {
         super("TCP Client");
+//        client = clientSocket;
 
         chatServer = host;
 

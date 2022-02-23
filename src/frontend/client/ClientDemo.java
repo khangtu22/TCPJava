@@ -1,7 +1,5 @@
 package frontend.client;
 
-
-
 import backend.model.Message;
 import frontend.DomainConstraint;
 import frontend.client.controllers.ClientManager;
@@ -21,80 +19,85 @@ import java.net.Socket;
 import java.util.Objects;
 
 /**
- * @overview Represents the main class of the CourseMan program.
- *
- * @attributes
- *  sman StudentManager
- *  mman ModuleManager
- *  gui JFrame
- *
- * @abstract_properties
- *   optional(sman) = false /\
- *   optional(mman) = false /\
- *   optional(gui) = false
- *
  * @author khang.tran
+ * @overview Represents the main class of the CourseMan program.
+ * @attributes sman StudentManager
+ * mman ModuleManager
+ * gui JFrame
+ * @abstract_properties optional(sman) = false /\
+ * optional(mman) = false /\
+ * optional(gui) = false
  */
 public class ClientDemo extends WindowAdapter implements ActionListener {
 
-//    private final ObjectOutputStream os;
+    private final String chatServer;
+    //    private final ObjectOutputStream os;
     private Socket client;
     private JTextArea displayArea;
-    private final String chatServer;
     private JTextField enterField;
     private JLabel enterFieldLabel;
     private ObjectOutputStream os;
     private ObjectInputStream oi;
     private String message = "";
 
-    @DomainConstraint(type=DomainConstraint.Type.String,optional=false)
-    private ClientManager cman;
+    @DomainConstraint(type = DomainConstraint.Type.String, optional = false)
+    private final ClientManager cman;
 
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JFrame gui;
 
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenuBar menuBar;
 
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenu jm1;
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenu jm2;
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenu jm3;
 
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenuItem jmi1;
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenuItem jmi2;
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenuItem jmi3;
-    @DomainConstraint(type=DomainConstraint.Type.Object,optional=false)
+    @DomainConstraint(type = DomainConstraint.Type.Object, optional = false)
     private JMenuItem jmi4;
 
     /**
      * @effects initialise <tt>sman, mman</tt> <br>
-     *          {@link #createGUI()}: create <tt>gui</tt>
+     * {@link #createGUI()}: create <tt>gui</tt>
      */
     public ClientDemo() throws IOException {
         chatServer = "localhost";
         createGUI();
-        while (true){
-            connectToServer();
-            cman = new ClientManager(client);
-        }
+        connectToServer();
+        cman = new ClientManager(client);
     }
 
+    /**
+     * The run method
+     *
+     * @effects create an instance of <tt>CourseManDemo</tt> {@link #startUp()}:
+     * start up the <tt>CourseManDemo</tt> instance {@link #display()}:
+     * display the main gui of <tt>CourseManDemo</tt> instance
+     */
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        ClientDemo app = new ClientDemo();
+        app.startUp();
+        app.display();
+    }
 
     /**
      * @modifies this.gui
      * @effects create <tt>gui</tt> that has a menu bar with:
-     *          <ol>
-     *          <li>File menu has one item: Exit
-     *          <li>Student menu has one item: New Student (to create a new student)
-     *          <li>Module menu has one item: New Module (to create a new module)
-     *          </ol>
-     *          The action listener of the menu items is <tt>this</tt>.
+     * <ol>
+     * <li>File menu has one item: Exit
+     * <li>Student menu has one item: New Student (to create a new student)
+     * <li>Module menu has one item: New Module (to create a new module)
+     * </ol>
+     * The action listener of the menu items is <tt>this</tt>.
      */
     public void createGUI() {
         gui = new JFrame();
@@ -109,7 +112,7 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
         jmi1 = new JMenuItem("Exit");
         jmi2 = new JMenuItem("New Student");
         jmi3 = new JMenuItem("New Module");
-        jmi4 =  new JMenuItem("Login");
+        jmi4 = new JMenuItem("Login");
 
         jmi1.addActionListener(this);
         jmi2.addActionListener(this);
@@ -169,7 +172,6 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
         }
     }
 
-
     // connect to server
     private void connectToServer() {
         displayMessage("Trying to connect...\n");
@@ -198,10 +200,11 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
             }
         });
     }
+
     public void runClient() {
         try {
             connectToServer();
-            while(!Objects.equals(message, "exit")) {
+            while (!Objects.equals(message, "exit")) {
                 getStreams();
                 processConnection();
             }
@@ -228,7 +231,6 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
         }
     }
 
-
     // close streams and socket
     private void closeConnection() {
         setTextFieldEditable(false);
@@ -241,7 +243,6 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
             System.out.println("Error close!");
         }
     }
-
 
     // send message to server
     private void sendData(String message) throws IOException {
@@ -268,7 +269,6 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
 
     }
 
-
     // send and receive data
     private void getStreams() throws IOException, ClassNotFoundException {
         os = new ObjectOutputStream(client.getOutputStream());
@@ -279,7 +279,7 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
     /**
      * @effects handles user actions on the menu items
      *
-     *          <pre>
+     * <pre>
      *          if menu item is Student/New Student
      *            .display()}
      *          else if menu item is Module/New Module
@@ -322,25 +322,12 @@ public class ClientDemo extends WindowAdapter implements ActionListener {
 
     /**
      * @effects shut down <tt>sman, mman</tt> <br>
-     *          dispose <tt>gui</tt> and end the program.
+     * dispose <tt>gui</tt> and end the program.
      */
     public void shutDown() throws IOException, ClassNotFoundException {
         System.out.println("Shutting down...");
         gui.dispose();
 //        sman.shutDown();
 //        mman.shutDown();
-    }
-
-    /**
-     * The run method
-     *
-     * @effects create an instance of <tt>CourseManDemo</tt> {@link #startUp()}:
-     *          start up the <tt>CourseManDemo</tt> instance {@link #display()}:
-     *          display the main gui of <tt>CourseManDemo</tt> instance
-     */
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        ClientDemo app = new ClientDemo();
-        app.startUp();
-        app.display();
     }
 }

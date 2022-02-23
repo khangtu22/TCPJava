@@ -28,7 +28,7 @@ CREATE TABLE `user`
 --
 
 INSERT INTO `user` (`user_id`, `name`, `email`, `password`)
-VALUES (1, 'Khang', 'vankhang@gmail.com', '123456'),
+VALUES (1, 'khang', 'vankhang@gmail.com', '123456'),
        (2, 'Nguyen Van A', 'a@gmail.com', '123456'),
        (3, 'Nguyen Van B', 'b@gmail.com', '123456'),
        (4, 'Nguyen Van C', 'c@gmail.com', '123456'),

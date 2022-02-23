@@ -1,4 +1,4 @@
-package backend.dao;//package com.company;
+package backend.dao;
 
 import backend.model.Message;
 import backend.model.User;
@@ -11,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class ServerThread implements Runnable {
@@ -19,6 +18,7 @@ public class ServerThread implements Runnable {
     public static final String USER_CREATE = "INSERT INTO user (name, password) VALUES (?, ?);";
     private static final ArrayList<ServerThread> instances = new ArrayList<>();
     private static final String USER_LOGIN = "SELECT * FROM user WHERE name = ? and password = ?";
+    private static final String GET_USER_BY_USERNAME = "SELECT * FROM user WHERE name = ?";
     private final Socket clientSocket;
 
     public ServerThread(Socket socket) {
@@ -106,6 +106,19 @@ public class ServerThread implements Runnable {
         }
     }
 
+
+    private synchronized Boolean isUserExisted(User user) throws SQLException {
+        boolean isExisted;
+        try (DBConnection dbHelper = DBConnection.getDBHelper();
+             Connection connection = dbHelper.getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_USER_BY_USERNAME)) {
+            statement.setString(1, user.getUsername());
+            isExisted = statement.executeUpdate() > 0;
+            return isExisted;
+        }
+    }
+
+
     private synchronized Boolean createUser(User user) throws SQLException {
         boolean rowUpdated = false;
         try (DBConnection dbHelper = DBConnection.getDBHelper(); Connection connection = dbHelper.getConnection(); PreparedStatement statement = connection.prepareStatement(USER_CREATE)) {
@@ -137,22 +150,33 @@ public class ServerThread implements Runnable {
                         User existedUser = checkLogin(user);
                         if (existedUser != null) {
                             System.out.println("Login successful!");
-                            oss.writeUTF("success");
+                            oss.writeUTF("Login succeed");
                             oss.flush();
                         } else {
                             System.out.println("Fail to login!");
-                            oss.writeUTF("fail");
+                            oss.writeUTF("Wrong username or password");
                             oss.flush();
                         }
                     }
 
                     case "register" -> {
+
                         User registerUser = (User) ois.readObject();
-                        Boolean isCreated = createUser(registerUser);
-                        if (isCreated) {
-                            System.out.println("Create user successful!");
+                        boolean isUserExisted = isUserExisted(registerUser);
+                        if (!isUserExisted) {
+                            boolean isCreated = createUser(registerUser);
+                            if (isCreated) {
+                                System.out.println("Create user successful!");
+                                oss.writeUTF("success");
+                                oss.flush();
+                            } else {
+                                System.out.println("Fail to create user!");
+                                oss.writeUTF("fail");
+                                oss.flush();
+                            }
                         } else {
-                            System.out.println("Fail to create user!");
+                            oss.writeUTF("Username already existed");
+                            oss.flush();
                         }
                     }
                     default -> {
@@ -169,9 +193,9 @@ public class ServerThread implements Runnable {
                         dispatch(message);
                     }
                 }
-//                ois.close();
-//                clientSocket.close();
-//                System.out.println("Client " + clientSocket.getRemoteSocketAddress() + " disconnect from server...");
+                /*ois.close();
+                clientSocket.close();
+                System.out.println("Client " + clientSocket.getRemoteSocketAddress() + " disconnect from server...");*/
             }
         } catch (IOException e) {
             System.out.println(e.getMessage());
